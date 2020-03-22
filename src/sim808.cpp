@@ -42,51 +42,48 @@ void SIM808::gpsRead(Entries * entries)
 
 void SIM808::gprsSendRequest(const Entries * entries)
 {
-    const uint8_t bufferSize = 120;
-    char buffer[bufferSize + 1] = { 0 };
+    const uint8_t commandSize = 120;
+    char command[commandSize + 1] = { 0 };
 
-    sendCommand("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"");
-    sendCommand("AT+SAPBR=3,1,\"APN\",\"internet\"");
-    sendCommand("AT+SAPBR=1,1");
-    sendCommand("AT+HTTPINIT");
-    sendCommand("AT+HTTPPARA=\"CID\",1");
+    const uint8_t responseSize = 120;
+    char response[responseSize + 1] = { 0 };
 
-    snprintf(buffer, bufferSize, 
-            "AT+HTTPPARA=\"URL\",\"https://chedv001.pythonanywhere.com/devices"
+    sendCommand("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"", response, responseSize);
+    sendCommand("AT+SAPBR=3,1,\"APN\",\"internet\"", response, responseSize);
+    sendCommand("AT+SAPBR=1,1", response, responseSize);
+    sendCommand("AT+HTTPINIT", response, responseSize);
+    sendCommand("AT+HTTPPARA=\"CID\",1", response, responseSize);
+
+    snprintf(command, commandSize, 
+            "AT+HTTPPARA=\"URL\",\"http://chedv001.pythonanywhere.com/devices"
             "/%s/entries\"", entries->deviceId);
-    sendCommand(buffer);
+    sendCommand(command, response, responseSize);
 
-    sendCommand("AT+HTTPSSL=1");
+    memset(command, 0, commandSize);
+    snprintf(command, commandSize, 
+            "AT+HTTPPARA=\"USERDATA\","
+            "\"Authorization: Token %s\"", entries->authToken);
+    sendCommand(command, response, responseSize);
 
-    memset(buffer, 0, bufferSize);
-    snprintf(buffer, bufferSize, 
-            "AT+HTTPPARA=\"Authorization\","
-            "\"Token %s\"", entries->authToken);
-    sendCommand(buffer);
+    sendCommand("AT+HTTPPARA=\"CONTENT\",\"text/nmea\"", response, responseSize);
 
-    sendCommand("AT+HTTPPARA=\"CONTENT\",\"text/nmea\"");
+    memset(command, 0, commandSize);
+    snprintf(command, commandSize, "AT+HTTPDATA=%d,10000", strlen(entries->gpsEntry));
+    sendCommand(command, response, responseSize);
 
-    memset(buffer, 0, bufferSize);
-    snprintf(buffer, bufferSize, "AT+HTTPDATA=%d,10000", strlen(entries->gpsEntry));
-    sendCommand(buffer);
+    sendCommand(entries->gpsEntry, response, responseSize);
+    Serial.println(entries->gpsEntry);
 
-    sendCommand(entries->gpsEntry);
-    sendCommand("AT+HTTPACTION=1");
+    sendCommand("AT+HTTPACTION=1", response, responseSize);
 
-    memset(buffer, 0, bufferSize);
-    awaitResponse(buffer, bufferSize);
+    memset(response, 0, responseSize);
+    awaitResponse(response, responseSize);
 
-    sendCommand("AT+HTTPTERM");
-    sendCommand("AT+SAPBR=0,1");
+    sendCommand("AT+HTTPTERM", response, responseSize);
+    sendCommand("AT+SAPBR=0,1", response, responseSize);
 }
 
 //-------------------------------------------------------------------------
-
-void SIM808::sendCommand(const char * command)
-{
-    sim808.println(command);
-    Serial.println(command);
-}
 
 void SIM808::sendCommand(const char * command, char * buffer, uint8_t bufferSize)
 {

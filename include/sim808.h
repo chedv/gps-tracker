@@ -52,6 +52,11 @@ bool checkStatus(const char * command, const char * status);
 
 //-------------------------------------------------------------------------
 
+inline void SIM808::sendCommand(const char * command)
+{
+    sim808.println(command);
+}
+
 inline bool SIM808::gpsAvailable()
 {
     return checkStatus("AT+CGPSSTATUS?", "Location 3D Fix");
