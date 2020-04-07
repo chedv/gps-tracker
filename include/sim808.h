@@ -1,46 +1,45 @@
 #ifndef _SIM808_H_
 #define _SIM808_H_
 
-#include <SoftwareSerial.h>
-#include <entries.h>
+#include "cfg_entries.h"
+#include "gps_entries.h"
 
-namespace SIM808 
+class Sim808 
 {
+public:
 
-extern SoftwareSerial sim808;
+    void init(HardwareSerial & serial, uint32_t speed);
 
-void init();
+    void gpsStart();
+    bool gpsAvailable();
+    void gpsRead(GpsEntries & gpsEntries);
 
-bool gpsAvailable();
-void gpsRead(Entries * entries);
+    bool gprsAvailable();
+    void gprsSendLocation(const CfgEntries & cfgEntries, const GpsEntries & gpsEntries);
 
-bool gprsAvailable();
-void gprsSendRequest(const Entries * entries);
+private:
 
-void sendCommand(const char * command);
-void sendCommand(const char * command, char * buffer, uint8_t bufferSize);
+    String sendCommand(const String & command);
+    String awaitResponse();
 
-void awaitResponse(char * buffer, uint8_t bufferSize);
-void formatResponse(char * response, uint8_t responseSize);
-void formatGpsReponse(const char * messageType, char * response, uint8_t responseSize);
+    void formatResponse(String & response) const;
+    void formatGpsReponse(const char * type, String & response) const;
+    
+    bool checkState(const char * command, const char * status);
 
-bool checkStatus(const char * command, const char * status);
+    String gpsReadNmea(uint8_t number, const char * type);
 
-}; // namespace SIM808
+    HardwareSerial * sim808;
+};
 
-inline void SIM808::sendCommand(const char * command)
+inline bool Sim808::gpsAvailable()
 {
-    sim808.println(command);
+    return checkState("AT+CGPSSTATUS?", "Location 3D Fix");
 }
 
-inline bool SIM808::gpsAvailable()
+inline bool Sim808::gprsAvailable()
 {
-    return checkStatus("AT+CGPSSTATUS?", "Location 3D Fix");
-}
-
-inline bool SIM808::gprsAvailable()
-{
-    return checkStatus("AT+CPIN?", "READY");
+    return checkState("AT+CPIN?", "READY");
 }
 
 #endif // _SIM808_H_

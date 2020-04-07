@@ -1,33 +1,49 @@
-#include <sim808.h>
-#include <sd.h>
-#include <helpers.h>
-#include <str.h>
+#include "config.h"
+#include "sim808.h"
+#include "sd_module.h"
+#include "timer.h"
+#include "stm32_id.h"
 
-void setup()
+GpsEntries gpsEntries;
+CfgEntries cfgEntries;
+
+Sim808 sim808;
+SdModule sdModule;
+
+Timer timer;
+
+void setup() 
 {
-    Serial.begin(9600);
+    Serial.begin(USB_serialSpeed);
 
-    SIM808::init();
-    SdModule::init();
-    
-    Helpers::readConfig(&entries);
-    Helpers::createIdentifier(&entries);
+    gpsEntries.initialized = false;
+    cfgEntries.deviceId = stm32Id();
+    cfgEntries.workDelay = STM_defaultDelay;
 
-    Serial.println(entries.deviceId);
-    Serial.println(entries.authToken);
-    Serial.println(entries.workDelay);
+    sim808.init(SIM_serial, SIM_serialSpeed);
+    sim808.gpsStart();
+
+    sdModule.init(SD_spiPort, SD_csPin);
+    sdModule.readConfig(cfgEntries);
+
+    timer.setInterval(cfgEntries.workDelay);
+    timer.update();
 }
 
-void loop()
+void loop() 
 {
-    if (millis() - entries.timer >= entries.workDelay)
+    if (timer.available())
     {
-        if (SIM808::gpsAvailable())
-            SIM808::gpsRead(&entries);
+        if (sim808.gpsAvailable())
+            sim808.gpsRead(gpsEntries);
 
-        if (!str::empty(entries.gpsEntry) && SIM808::gprsAvailable())
-            SIM808::gprsSendRequest(&entries);
+        if (gpsEntries.initialized)
+        {
+            if (sim808.gprsAvailable())
+                sim808.gprsSendLocation(cfgEntries, gpsEntries);
 
-        entries.timer = millis();
+            sdModule.writeLocation(gpsEntries);
+        }
+        timer.update();
     }
 }
