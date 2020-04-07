@@ -3,8 +3,6 @@
 #include <sd.h>
 #include <str.h>
 
-//-------------------------------------------------------------------------
-
 void Helpers::readConfig(Entries * entries)
 {
     const uint8_t bufferSize = 80;
@@ -69,5 +67,3 @@ void Helpers::createIdentifier(Entries * entries)
     }
     strncpy(entries->deviceId, result, DEVICE_ID_SIZE);
 }
-
-//-------------------------------------------------------------------------

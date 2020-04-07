@@ -1,10 +1,6 @@
 #include <sd.h>
 
-//-------------------------------------------------------------------------
-
 FATFS SdModule::fs;
-
-//-------------------------------------------------------------------------
 
 uint8_t SdModule::init()
 {
@@ -16,8 +12,6 @@ uint8_t SdModule::init()
     return result;
 }
 
-//-------------------------------------------------------------------------
-
 uint8_t SdModule::read(const char * path, char * buffer, uint8_t bufferSize)
 {
     UINT br = {};
@@ -27,5 +21,3 @@ uint8_t SdModule::read(const char * path, char * buffer, uint8_t bufferSize)
     
     return br;
 }
-
-//-------------------------------------------------------------------------

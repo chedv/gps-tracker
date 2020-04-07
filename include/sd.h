@@ -2,7 +2,7 @@
 #define _SD_H_
 
 #include <Arduino.h>
-#include <sdlib.h>
+#include <PetitFS.h>
 #include <SoftwareSerial.h>
 
 //-------------------------------------------------------------------------

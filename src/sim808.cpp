@@ -1,15 +1,11 @@
 #include "sim808.h"
 #include <str.h>
 
-//-------------------------------------------------------------------------
-
 const uint8_t rxPin = 3;
 const uint8_t txPin = 2;
 const uint16_t serialSpeed = 9600;
 
 SoftwareSerial SIM808::sim808(rxPin, txPin);
-
-//-------------------------------------------------------------------------
 
 void SIM808::init()
 {
@@ -19,8 +15,6 @@ void SIM808::init()
     sendCommand("AT+CGPSPWR=1");
     sendCommand("AT+CGPSRST=1");
 }
-
-//-------------------------------------------------------------------------
 
 void SIM808::gpsRead(Entries * entries)
 {
@@ -37,8 +31,6 @@ void SIM808::gpsRead(Entries * entries)
     memset(entries->gpsEntry, 0, GPS_ENTRY_SIZE);
     strncpy(entries->gpsEntry, response, GPS_ENTRY_SIZE);
 }
-
-//-------------------------------------------------------------------------
 
 void SIM808::gprsSendRequest(const Entries * entries)
 {
@@ -83,8 +75,6 @@ void SIM808::gprsSendRequest(const Entries * entries)
     sendCommand("AT+SAPBR=0,1", response, responseSize);
 }
 
-//-------------------------------------------------------------------------
-
 void SIM808::sendCommand(const char * command, char * buffer, uint8_t bufferSize)
 {
     sendCommand(command);
@@ -92,8 +82,6 @@ void SIM808::sendCommand(const char * command, char * buffer, uint8_t bufferSize
     memset(buffer, 0, bufferSize);
     awaitResponse(buffer, bufferSize);
 }
-
-//-------------------------------------------------------------------------
 
 void SIM808::awaitResponse(char * buffer, uint8_t bufferSize)
 {
@@ -148,8 +136,6 @@ void SIM808::formatGpsReponse(const char * messageType, char * response, uint8_t
     Serial.println(response);
 }
 
-//-------------------------------------------------------------------------
-
 bool SIM808::checkStatus(const char * command, const char * status)
 {
     uint8_t bufferSize = 120;
@@ -160,5 +146,3 @@ bool SIM808::checkStatus(const char * command, const char * status)
 
     return strcmp(responseBuffer, status) == 0;
 }
-
-//-------------------------------------------------------------------------
