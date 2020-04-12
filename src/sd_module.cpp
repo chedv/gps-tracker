@@ -14,7 +14,7 @@ void SdModule::readConfig(CfgEntries & cfgEntries) const
     {
         while (file.available())
         {
-            String buffer = file.readString();
+            String buffer = file.readStringUntil('\n');
 
             uint8_t pos;
             if ((pos = buffer.indexOf('=')) != -1)
