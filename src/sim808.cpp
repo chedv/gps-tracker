@@ -45,6 +45,20 @@ void Sim808::gpsRead(GpsEntries & entries)
     }
 }
 
+bool Sim808::gprsAvailable()
+{
+    String response = sendCommand("AT+CGREG?");
+    formatResponse(response);
+
+    uint8_t pos = response.indexOf(',');
+    if (pos >= 0 && pos < response.length() - 1)
+    {
+        uint8_t statusCode = response.substring(pos + 1).toInt();
+        return statusCode == 0 || statusCode == 5;
+    }
+    return false;
+}
+
 void Sim808::gprsSendLocation(const CfgEntries & cfgEntries, const GpsEntries & gpsEntries)
 {
     sendCommand("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"");

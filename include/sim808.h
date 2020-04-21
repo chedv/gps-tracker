@@ -30,9 +30,4 @@ private:
     HardwareSerial * sim808;
 };
 
-inline bool Sim808::gprsAvailable()
-{
-    return checkResponse("AT+CPIN?", "READY");
-}
-
 #endif // _SIM808_H_
