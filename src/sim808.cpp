@@ -7,33 +7,41 @@ void Sim808::init(HardwareSerial & serial, uint32_t speed)
     sim808->begin(speed);
 }
 
-void Sim808::gpsStart()
+bool Sim808::gpsAvailable()
 {
-    sendCommand("AT+CGPSPWR=1");
-    sendCommand("AT+CGPSRST=1");
+    if (checkResponse("AT+CGPSPWR?", "0"))
+    {
+        sendCommand("AT+CGPSPWR=1");
+        sendCommand("AT+CGPSRST=1");
+        return false;
+    }
+    return checkResponse("AT+CGPSSTATUS?", "Location 3D Fix");
 }
 
 void Sim808::gpsRead(GpsEntries & entries)
 {
     const char * nmeaSentences = String(
-        gpsReadNmea(0, "$GPGGA") + "\r\n" +
-        gpsReadNmea(32, "$GPRMC") + "\r\n"
+        gpsReadNmea(32, "$GPRMC") + "\r\n" +
+        gpsReadNmea(0, "$GPGGA") + "\r\n"
     ).c_str();
 
     TinyGPSPlus parser;
 
     while(*nmeaSentences)
-        parser.encode(*nmeaSentences++);
-
-    if (parser.location.isValid() && parser.date.isValid() && parser.time.isValid())
     {
-        entries = {
-            parser.location.lat(), 
-            parser.location.lng(),
-            { parser.date.year(), parser.date.month(), parser.date.day() },
-            { parser.time.hour(), parser.time.minute(), parser.time.second() },
-            .initialized = true
-        };
+        if (parser.encode(*nmeaSentences++))
+        {
+            if (parser.location.isValid() && parser.date.isValid() && parser.time.isValid())
+            {
+                entries = {
+                    parser.location.lat(), 
+                    parser.location.lng(),
+                    { parser.date.year(), parser.date.month(), parser.date.day() },
+                    { parser.time.hour(), parser.time.minute(), parser.time.second() },
+                    .initialized = true
+                };
+            }
+        }
     }
 }
 
@@ -60,8 +68,7 @@ void Sim808::gprsSendLocation(const CfgEntries & cfgEntries, const GpsEntries & 
     Serial.println(entries);
 
     sendCommand("AT+HTTPACTION=1");
-
-    awaitResponse();
+    Serial.println(awaitResponse());
 
     sendCommand("AT+HTTPTERM");
     sendCommand("AT+SAPBR=0,1");
@@ -105,18 +112,18 @@ void Sim808::formatGpsReponse(const char * messageType, String & response) const
         response = messageType + response.substring(pos);
 }
 
-bool Sim808::checkState(const char * command, const char * status)
+bool Sim808::checkResponse(const char * command, const char * status)
 {
     String response = sendCommand(command);
 
     formatResponse(response);
 
-    return response.equalsIgnoreCase(status);
+    return response.equals(status);
 }
 
 String Sim808::gpsReadNmea(uint8_t number, const char * type)
 {
-    String response = sendCommand("AT+CGPSINF=" + number);
+    String response = sendCommand("AT+CGPSINF=" + String(number));
 
     formatResponse(response);
     formatGpsReponse(type, response);

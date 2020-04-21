@@ -10,7 +10,6 @@ public:
 
     void init(HardwareSerial & serial, uint32_t speed);
 
-    void gpsStart();
     bool gpsAvailable();
     void gpsRead(GpsEntries & gpsEntries);
 
@@ -24,22 +23,16 @@ private:
 
     void formatResponse(String & response) const;
     void formatGpsReponse(const char * type, String & response) const;
-    
-    bool checkState(const char * command, const char * status);
+    bool checkResponse(const char * command, const char * status);
 
     String gpsReadNmea(uint8_t number, const char * type);
 
     HardwareSerial * sim808;
 };
 
-inline bool Sim808::gpsAvailable()
-{
-    return checkState("AT+CGPSSTATUS?", "Location 3D Fix");
-}
-
 inline bool Sim808::gprsAvailable()
 {
-    return checkState("AT+CPIN?", "READY");
+    return checkResponse("AT+CPIN?", "READY");
 }
 
 #endif // _SIM808_H_

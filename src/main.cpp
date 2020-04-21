@@ -21,8 +21,6 @@ void setup()
     cfgEntries.workDelay = STM_defaultDelay;
 
     sim808.init(SIM_serial, SIM_serialSpeed);
-    sim808.gpsStart();
-
     sdModule.init(SD_spiPort, SD_csPin);
     sdModule.readConfig(cfgEntries);
 
