@@ -9,27 +9,24 @@ void Sim808::init(HardwareSerial & serial, uint32_t speed)
 
 bool Sim808::gpsAvailable()
 {
-    if (checkResponse("AT+CGPSPWR?", "0"))
+    if (sendCommand("AT+CGPSPWR?", true).toInt() == 1)
     {
-        sendCommand("AT+CGPSPWR=1");
-        sendCommand("AT+CGPSRST=1");
-        return false;
+        return sendCommand("AT+CGPSSTATUS?", true)
+            .equalsIgnoreCase("Location 3D Fix");
     }
-    return checkResponse("AT+CGPSSTATUS?", "Location 3D Fix");
+    sendCommand("AT+CGPSPWR=1");
+    return false;
 }
 
 void Sim808::gpsRead(GpsEntries & entries)
 {
-    const char * nmeaSentences = String(
-        gpsReadNmea(32, "$GPRMC") + "\r\n" +
-        gpsReadNmea(0, "$GPGGA") + "\r\n"
-    ).c_str();
-
+    const uint8_t sentenceCode = 32;
+    const char * nmeaSentence = readNmeaSentence(sentenceCode).c_str();
     TinyGPSPlus parser;
 
-    while(*nmeaSentences)
+    while(*nmeaSentence)
     {
-        if (parser.encode(*nmeaSentences++))
+        if (parser.encode(*nmeaSentence++))
         {
             if (parser.location.isValid() && parser.date.isValid() && parser.time.isValid())
             {
@@ -47,13 +44,12 @@ void Sim808::gpsRead(GpsEntries & entries)
 
 bool Sim808::gprsAvailable()
 {
-    String response = sendCommand("AT+CGREG?");
-    formatResponse(response);
+    const String response = sendCommand("AT+CGREG?", true);
 
-    uint8_t pos = response.indexOf(',');
+    const uint8_t pos = response.indexOf(',');
     if (pos >= 0 && pos < response.length() - 1)
     {
-        uint8_t statusCode = response.substring(pos + 1).toInt();
+        const uint8_t statusCode = response.substring(pos + 1).toInt();
         return statusCode == 0 || statusCode == 5;
     }
     return false;
@@ -82,65 +78,63 @@ void Sim808::gprsSendLocation(const CfgEntries & cfgEntries, const GpsEntries & 
     Serial.println(entries);
 
     sendCommand("AT+HTTPACTION=1");
-    Serial.println(awaitResponse());
+    Serial.println(readResponse());
 
     sendCommand("AT+HTTPTERM");
     sendCommand("AT+SAPBR=0,1");
 }
 
-String Sim808::sendCommand(const String & command)
+void Sim808::sendCommandNoWait(const String & command)
 {
     sim808->println(command);
     Serial.println(command);
-
-    return awaitResponse();
 }
 
-String Sim808::awaitResponse()
+String Sim808::sendCommand(const String & command, bool parse)
 {
-    const uint32_t timeout = millis() + 10000;
-    while(!sim808->available() && millis() < timeout);
+    sendCommandNoWait(command);
 
-    if (sim808->available())
-        return sim808->readString();
-    return "timeout";
+    String response = readResponse();
+    return parse ? parseResponse(response) : response;
 }
 
-void Sim808::formatResponse(String & response) const
+bool Sim808::awaitResponse(uint32_t timeout)
 {
-    uint8_t pos;
+    const uint32_t timeDelay = millis() + timeout;
+    while(!sim808->available() && millis() < timeDelay);
 
-    if ((pos = response.indexOf(':')) != -1)
-        response = response.substring(pos + 2);
-    if ((pos = response.indexOf("\r\n")) != -1)
-        response = response.substring(0, pos);
-    
-    Serial.println(response);
+    return sim808->available();
 }
 
-void Sim808::formatGpsReponse(const char * messageType, String & response) const
+String Sim808::readResponse()
 {
-    uint8_t pos;
-
-    if ((pos = response.indexOf(',')) != -1)
-        response = messageType + response.substring(pos);
+    return awaitResponse() ? sim808->readString() : "timeout";
 }
 
-bool Sim808::checkResponse(const char * command, const char * status)
+String Sim808::readNmeaSentence(uint8_t sentenceCode)
 {
-    String response = sendCommand(command);
+    sendCommandNoWait("AT+CGPSOUT=" + String(sentenceCode));
+    String response = "timeout";
 
-    formatResponse(response);
-
-    return response.equals(status);
-}
-
-String Sim808::gpsReadNmea(uint8_t number, const char * type)
-{
-    String response = sendCommand("AT+CGPSINF=" + String(number));
-
-    formatResponse(response);
-    formatGpsReponse(type, response);
-
+    if (awaitResponse())
+    {
+        sim808->readStringUntil('$');
+        response = '$' + sim808->readStringUntil('\n') + '\n';
+    }
+    sendCommand("AT+CGPSOUT=0");
     return response;
+}
+
+String Sim808::parseResponse(const String & response)
+{
+    String result = response;
+    uint8_t pos;
+
+    if ((pos = result.indexOf(':')) != -1)
+        result = result.substring(pos + 2);
+    if ((pos = result.indexOf("\r\n")) != -1)
+        result = result.substring(0, pos);
+    
+    Serial.println(result);
+    return result;
 }

@@ -1,5 +1,5 @@
-#ifndef _PORTS_H_
-#define _PORTS_H_
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
 
 #include <Arduino.h>
 
@@ -17,4 +17,4 @@ const uint32_t SIM_serialSpeed = 9600;
 
 HardwareSerial & SIM_serial = Serial3;
 
-#endif // _PORTS_H_
+#endif // _CONFIG_H_

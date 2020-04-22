@@ -1,5 +1,5 @@
-#ifndef _ID_H_
-#define _ID_H_
+#ifndef _STM32_ID_H_
+#define _STM32_ID_H_
 
 #include "config.h"
 
@@ -13,4 +13,4 @@ inline String stm32Id()
     return String(stm32Number(1), HEX) + String(stm32Number(2), HEX);
 }
 
-#endif // _ID_H_
+#endif // _STM32_ID_H_

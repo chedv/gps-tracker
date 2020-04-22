@@ -18,14 +18,15 @@ public:
 
 private:
 
-    String sendCommand(const String & command);
-    String awaitResponse();
+    void sendCommandNoWait(const String & command);
+    String sendCommand(const String & command, bool edit = false);
 
-    void formatResponse(String & response) const;
-    void formatGpsReponse(const char * type, String & response) const;
-    bool checkResponse(const char * command, const char * status);
+    bool awaitResponse(uint32_t timeout = 10000);
+    String readResponse();
 
-    String gpsReadNmea(uint8_t number, const char * type);
+    String readNmeaSentence(uint8_t sentenceCode);
+
+    static String parseResponse(const String & response);
 
     HardwareSerial * sim808;
 };
