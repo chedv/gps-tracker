@@ -10,10 +10,8 @@ void Sim808::init(HardwareSerial & serial, uint32_t speed)
 bool Sim808::gpsAvailable()
 {
     if (sendCommand("AT+CGPSPWR?", true).toInt() == 1)
-    {
-        return sendCommand("AT+CGPSSTATUS?", true)
-            .equalsIgnoreCase("Location 3D Fix");
-    }
+        return sendCommand("AT+CGPSSTATUS?", true).equalsIgnoreCase("Location 3D Fix");
+
     sendCommand("AT+CGPSPWR=1");
     return false;
 }
