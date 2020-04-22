@@ -14,14 +14,14 @@ Timer timer;
 
 void setup() 
 {
-    Serial.begin(USB_serialSpeed);
+    Serial.begin(USB_SERIAL_SPEED);
 
     gpsEntries.initialized = false;
     cfgEntries.deviceId = stm32Id();
-    cfgEntries.workDelay = STM_defaultDelay;
+    cfgEntries.workDelay = STM_DEFAULT_DELAY;
 
-    sim808.init(SIM_serial, SIM_serialSpeed);
-    sdModule.init(SD_spiPort, SD_csPin);
+    sim808.init(SIM_SERIAL, SIM_SERIAL_SPEED);
+    sdModule.init(SD_SPI_PORT, SD_CS_PIN);
     sdModule.readConfig(cfgEntries);
 
     timer.setInterval(cfgEntries.workDelay);

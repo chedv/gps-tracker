@@ -5,7 +5,7 @@
 
 inline uint32_t stm32Number(uint8_t shift)
 {
-    return *(((uint32_t *)STM_address) + shift);
+    return *(((uint32_t *)STM_ID_ADDRESS) + shift);
 }
 
 inline String stm32Id()
