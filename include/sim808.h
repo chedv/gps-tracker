@@ -24,9 +24,9 @@ private:
     bool awaitResponse(uint32_t timeout = 10000);
     String readResponse();
 
-    String readNmeaSentence(uint8_t sentenceCode);
-
     static String parseResponse(const String & response);
+
+    String readNmeaSentence(uint8_t sentenceCode);
 
     HardwareSerial * sim808;
 };

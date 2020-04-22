@@ -109,20 +109,6 @@ String Sim808::readResponse()
     return awaitResponse() ? sim808->readString() : "timeout";
 }
 
-String Sim808::readNmeaSentence(uint8_t sentenceCode)
-{
-    sendCommandNoWait("AT+CGPSOUT=" + String(sentenceCode));
-    String response = "timeout";
-
-    if (awaitResponse())
-    {
-        sim808->readStringUntil('$');
-        response = '$' + sim808->readStringUntil('\n') + '\n';
-    }
-    sendCommand("AT+CGPSOUT=0");
-    return response;
-}
-
 String Sim808::parseResponse(const String & response)
 {
     String result = response;
@@ -135,4 +121,18 @@ String Sim808::parseResponse(const String & response)
     
     Serial.println(result);
     return result;
+}
+
+String Sim808::readNmeaSentence(uint8_t sentenceCode)
+{
+    sendCommandNoWait("AT+CGPSOUT=" + String(sentenceCode));
+    String response = "timeout";
+
+    if (awaitResponse())
+    {
+        sim808->readStringUntil('$');
+        response = '$' + sim808->readStringUntil('\n') + '\n';
+    }
+    sendCommand("AT+CGPSOUT=0");
+    return response;
 }
