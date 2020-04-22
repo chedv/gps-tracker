@@ -19,12 +19,12 @@ struct GpsEntries
 
 inline String GpsEntries::toString() const
 {
-    return String(latitude) + ' ' + String(longitude) + ' ' + date.toString() + ' ' + time.toString();
+    return String(latitude, 6) + ' ' + String(longitude, 6) + ' ' + date.toString() + ' ' + time.toString();
 }
 
 inline String GpsEntries::toJson() const
 {
-    return "{ \"latitude\": " + String(latitude) + ", \"longitude\": " + String(longitude)
+    return "{ \"latitude\": " + String(latitude, 6) + ", \"longitude\": " + String(longitude, 6)
         + ", \"datetime\": \"" + date.toString() + ' ' + time.toString() + "\" }";
 }
 
