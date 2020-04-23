@@ -11,12 +11,14 @@ public:
     void init(HardwareSerial & serial, uint32_t speed);
 
     bool gpsAvailable();
-    void gpsRead(GpsEntries & gpsEntries);
+    bool gpsRead(GpsEntries & gpsEntries);
 
     bool gprsAvailable();
-    void gprsSendLocation(const CfgEntries & cfgEntries, const GpsEntries & gpsEntries);
+    bool gprsSendLocation(const CfgEntries & cfgEntries, const GpsEntries & gpsEntries);
 
 private:
+
+    static String parseResponse(const String & response);
 
     void sendCommandNoWait(const String & command);
     String sendCommand(const String & command, bool edit = false);
@@ -24,9 +26,8 @@ private:
     bool awaitResponse(uint32_t timeout = 10000);
     String readResponse();
 
-    static String parseResponse(const String & response);
-
     String readNmeaSentence(uint8_t sentenceCode);
+    uint16_t readHttpStatusCode();
 
     HardwareSerial * sim808;
 };

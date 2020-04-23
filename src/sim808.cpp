@@ -16,7 +16,7 @@ bool Sim808::gpsAvailable()
     return false;
 }
 
-void Sim808::gpsRead(GpsEntries & entries)
+bool Sim808::gpsRead(GpsEntries & entries)
 {
     const uint8_t sentenceCode = 32;
     const char * nmeaSentence = readNmeaSentence(sentenceCode).c_str();
@@ -35,9 +35,11 @@ void Sim808::gpsRead(GpsEntries & entries)
                     { parser.time.hour(), parser.time.minute(), parser.time.second() },
                     .initialized = true
                 };
+                return true;
             }
         }
     }
+    return false;
 }
 
 bool Sim808::gprsAvailable()
@@ -53,7 +55,7 @@ bool Sim808::gprsAvailable()
     return false;
 }
 
-void Sim808::gprsSendLocation(const CfgEntries & cfgEntries, const GpsEntries & gpsEntries)
+bool Sim808::gprsSendLocation(const CfgEntries & cfgEntries, const GpsEntries & gpsEntries)
 {
     sendCommand("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"");
     sendCommand("AT+SAPBR=3,1,\"APN\",\"internet\"");
@@ -76,10 +78,31 @@ void Sim808::gprsSendLocation(const CfgEntries & cfgEntries, const GpsEntries & 
     Serial.println(entries);
 
     sendCommand("AT+HTTPACTION=1");
-    Serial.println(readResponse());
+
+    uint16_t statusCode = readHttpStatusCode();
+    Serial.println(statusCode);
 
     sendCommand("AT+HTTPTERM");
     sendCommand("AT+SAPBR=0,1");
+
+    static const uint16_t HTTP_200_OK = 200;
+    static const uint16_t HTTP_201_CREATED = 201;
+
+    return statusCode == HTTP_200_OK || statusCode == HTTP_201_CREATED;
+}
+
+String Sim808::parseResponse(const String & response)
+{
+    String result = response;
+    uint8_t pos;
+
+    if ((pos = result.indexOf(':')) != -1)
+        result = result.substring(pos + 2);
+    if ((pos = result.indexOf("\r\n")) != -1)
+        result = result.substring(0, pos);
+    
+    Serial.println(result);
+    return result;
 }
 
 void Sim808::sendCommandNoWait(const String & command)
@@ -109,20 +132,6 @@ String Sim808::readResponse()
     return awaitResponse() ? sim808->readString() : "timeout";
 }
 
-String Sim808::parseResponse(const String & response)
-{
-    String result = response;
-    uint8_t pos;
-
-    if ((pos = result.indexOf(':')) != -1)
-        result = result.substring(pos + 2);
-    if ((pos = result.indexOf("\r\n")) != -1)
-        result = result.substring(0, pos);
-    
-    Serial.println(result);
-    return result;
-}
-
 String Sim808::readNmeaSentence(uint8_t sentenceCode)
 {
     sendCommandNoWait("AT+CGPSOUT=" + String(sentenceCode));
@@ -135,4 +144,21 @@ String Sim808::readNmeaSentence(uint8_t sentenceCode)
     }
     sendCommand("AT+CGPSOUT=0");
     return response;
+}
+
+uint16_t Sim808::readHttpStatusCode()
+{
+    String response = readResponse();
+    parseResponse(response);
+
+    uint8_t start = response.indexOf(',');
+    uint8_t end = response.lastIndexOf(',');
+
+    if (start != -1 && end != -1)
+    {
+        uint16_t statusCode = response.substring(start + 1, end).toInt();
+        if (statusCode >= 100 && statusCode < 720)
+            return statusCode;
+    }
+    return 0;
 }
