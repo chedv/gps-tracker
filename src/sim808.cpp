@@ -1,5 +1,5 @@
 #include "sim808.h"
-#include <TinyGPS++.h>
+#include "nmea_parser.h"
 
 void Sim808::init(HardwareSerial & serial, uint32_t speed)
 {
@@ -18,26 +18,18 @@ bool Sim808::gpsAvailable()
 
 bool Sim808::gpsRead(GpsEntries & entries)
 {
-    const uint8_t sentenceCode = 32;
-    const char * nmeaSentence = readNmeaSentence(sentenceCode).c_str();
-    TinyGPSPlus parser;
+    static const uint8_t GPGGA = 2;
+    static const uint8_t GPRMC = 32;
 
-    while(*nmeaSentence)
+    NmeaParser parser;
+
+    parser.parseSentence(readNmeaSentence(GPGGA));
+    parser.parseSentence(readNmeaSentence(GPRMC));
+    
+    if (parser.isValid())
     {
-        if (parser.encode(*nmeaSentence++))
-        {
-            if (parser.location.isValid() && parser.date.isValid() && parser.time.isValid())
-            {
-                entries = {
-                    parser.location.lat(), 
-                    parser.location.lng(),
-                    { parser.date.year(), parser.date.month(), parser.date.day() },
-                    { parser.time.hour(), parser.time.minute(), parser.time.second() },
-                    .initialized = true
-                };
-                return true;
-            }
-        }
+        entries = parser.getResult();
+        return true;
     }
     return false;
 }
@@ -49,8 +41,11 @@ bool Sim808::gprsAvailable()
     const uint8_t pos = response.indexOf(',');
     if (pos >= 0 && pos < response.length() - 1)
     {
+        static const uint8_t REGISTERED_STATUS = 0;
+        static const uint8_t REGISTERED_ROAMING_STATUS = 5;
+
         const uint8_t statusCode = response.substring(pos + 1).toInt();
-        return statusCode == 0 || statusCode == 5;
+        return statusCode == REGISTERED_STATUS || statusCode == REGISTERED_ROAMING_STATUS;
     }
     return false;
 }
@@ -91,32 +86,16 @@ bool Sim808::gprsSendLocation(const CfgEntries & cfgEntries, const GpsEntries & 
     return statusCode == HTTP_200_OK || statusCode == HTTP_201_CREATED;
 }
 
-String Sim808::parseResponse(const String & response)
+String Sim808::sendCommand(const String & command, bool parse)
 {
-    String result = response;
-    uint8_t pos;
-
-    if ((pos = result.indexOf(':')) != -1)
-        result = result.substring(pos + 2);
-    if ((pos = result.indexOf("\r\n")) != -1)
-        result = result.substring(0, pos);
-    
-    Serial.println(result);
-    return result;
+    sendCommandNoWait(command);
+    return readResponse(parse);
 }
 
 void Sim808::sendCommandNoWait(const String & command)
 {
     sim808->println(command);
     Serial.println(command);
-}
-
-String Sim808::sendCommand(const String & command, bool parse)
-{
-    sendCommandNoWait(command);
-
-    String response = readResponse();
-    return parse ? parseResponse(response) : response;
 }
 
 bool Sim808::awaitResponse(uint32_t timeout)
@@ -127,9 +106,25 @@ bool Sim808::awaitResponse(uint32_t timeout)
     return sim808->available();
 }
 
-String Sim808::readResponse()
+String Sim808::readResponse(bool parse)
 {
-    return awaitResponse() ? sim808->readString() : "timeout";
+    if (!awaitResponse())
+        return "timeout";
+    
+    String response = sim808->readString();
+
+    if (!parse)
+        return response;
+
+    uint8_t pos;
+
+    if ((pos = response.indexOf(':')) != -1)
+        response = response.substring(pos + 2);
+    if ((pos = response.indexOf("\r\n")) != -1)
+        response = response.substring(0, pos);
+
+    Serial.println(response);
+    return response;
 }
 
 String Sim808::readNmeaSentence(uint8_t sentenceCode)
@@ -148,8 +143,7 @@ String Sim808::readNmeaSentence(uint8_t sentenceCode)
 
 uint16_t Sim808::readHttpStatusCode()
 {
-    String response = readResponse();
-    parseResponse(response);
+    String response = readResponse(true);
 
     uint8_t start = response.indexOf(',');
     uint8_t end = response.lastIndexOf(',');

@@ -18,13 +18,11 @@ public:
 
 private:
 
-    static String parseResponse(const String & response);
-
+    String sendCommand(const String & command, bool parse = false);
     void sendCommandNoWait(const String & command);
-    String sendCommand(const String & command, bool edit = false);
 
     bool awaitResponse(uint32_t timeout = 10000);
-    String readResponse();
+    String readResponse(bool parse);
 
     String readNmeaSentence(uint8_t sentenceCode);
     uint16_t readHttpStatusCode();

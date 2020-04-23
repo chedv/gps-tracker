@@ -42,7 +42,7 @@ void SdModule::writeLocation(const GpsEntries & gpsEntries) const
 
     if (file)
     {
-        file.println(gpsEntries.toString());
+        file.println(gpsEntries.toJson());
         file.close();
     }
 }

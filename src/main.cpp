@@ -12,11 +12,10 @@ SdModule sdModule;
 
 Timer timer;
 
-void setup() 
+void setup()
 {
     Serial.begin(USB_SERIAL_SPEED);
 
-    gpsEntries.initialized = false;
     cfgEntries.deviceId = stm32Id();
     cfgEntries.workDelay = STM_DEFAULT_DELAY;
 
@@ -27,14 +26,11 @@ void setup()
     timer.setInterval(cfgEntries.workDelay);
 }
 
-void loop() 
+void loop()
 {
     if (timer.available())
     {
-        if (sim808.gpsAvailable())
-            sim808.gpsRead(gpsEntries);
-
-        if (gpsEntries.initialized)
+        if (sim808.gpsAvailable() && sim808.gpsRead(gpsEntries))
         {
             if (sim808.gprsAvailable())
                 sim808.gprsSendLocation(cfgEntries, gpsEntries);
