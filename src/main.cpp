@@ -25,7 +25,6 @@ void setup()
     sdModule.readConfig(cfgEntries);
 
     timer.setInterval(cfgEntries.workDelay);
-    timer.update();
 }
 
 void loop() 

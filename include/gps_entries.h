@@ -25,7 +25,7 @@ inline String GpsEntries::toString() const
 inline String GpsEntries::toJson() const
 {
     return "{ \"latitude\": " + String(latitude, 6) + ", \"longitude\": " + String(longitude, 6)
-        + ", \"datetime\": \"" + date.toString() + ' ' + time.toString() + "\" }";
+        + ", \"datetime\": \"" + date.toString() + 'T' + time.toString() + "Z\" }";
 }
 
 #endif // _GPS_ENTRIES_H_
