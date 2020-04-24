@@ -41,7 +41,7 @@ bool Sim808::gprsAvailable()
     const uint8_t pos = response.indexOf(',');
     if (pos >= 0 && pos < response.length() - 1)
     {
-        static const uint8_t REGISTERED_STATUS = 0;
+        static const uint8_t REGISTERED_STATUS = 1;
         static const uint8_t REGISTERED_ROAMING_STATUS = 5;
 
         const uint8_t statusCode = response.substring(pos + 1).toInt();
@@ -50,7 +50,7 @@ bool Sim808::gprsAvailable()
     return false;
 }
 
-bool Sim808::gprsSendLocation(const CfgEntries & cfgEntries, const GpsEntries & gpsEntries)
+bool Sim808::gprsSendLocation(const CfgEntries & cfgEntries, const String & gpsEntries)
 {
     sendCommand("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"");
     sendCommand("AT+SAPBR=3,1,\"APN\",\"internet\"");
@@ -66,9 +66,8 @@ bool Sim808::gprsSendLocation(const CfgEntries & cfgEntries, const GpsEntries & 
 
     sendCommand("AT+HTTPPARA=\"CONTENT\",\"application/json\"");
 
-    String entries = gpsEntries.toJson();
-    sendCommand("AT+HTTPDATA=" + String(entries.length()) + ",10000");
-    sendCommand(entries);
+    sendCommand("AT+HTTPDATA=" + String(gpsEntries.length()) + ",10000");
+    sendCommand(gpsEntries);
 
     sendCommand("AT+HTTPACTION=1");
     uint16_t statusCode = readHttpStatusCode();

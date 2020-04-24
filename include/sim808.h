@@ -14,7 +14,7 @@ public:
     bool gpsRead(GpsEntries & gpsEntries);
 
     bool gprsAvailable();
-    bool gprsSendLocation(const CfgEntries & cfgEntries, const GpsEntries & gpsEntries);
+    bool gprsSendLocation(const CfgEntries & cfgEntries, const String & gpsEntries);
 
 private:
 

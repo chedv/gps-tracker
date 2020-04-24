@@ -30,12 +30,15 @@ void loop()
 {
     if (timer.available())
     {
+        if (sim808.gprsAvailable())
+            sdModule.restoreLocation(cfgEntries, sim808);
+
         if (sim808.gpsAvailable() && sim808.gpsRead(gpsEntries))
         {
             if (sim808.gprsAvailable())
-                sim808.gprsSendLocation(cfgEntries, gpsEntries);
-
-            sdModule.writeLocation(gpsEntries);
+                sim808.gprsSendLocation(cfgEntries, gpsEntries.toJson());
+            else
+                sdModule.writeLocation(gpsEntries);
         }
         timer.update();
     }

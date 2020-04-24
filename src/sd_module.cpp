@@ -46,3 +46,17 @@ void SdModule::writeLocation(const GpsEntries & gpsEntries) const
         file.close();
     }
 }
+
+void SdModule::restoreLocation(const CfgEntries & cfgEntries, Sim808 & sim808) const
+{
+    File file = SD.open("log.txt", FILE_READ);
+
+    if (file)
+    {
+        while (file.available())
+            sim808.gprsSendLocation(cfgEntries, file.readStringUntil('\n'));
+
+        file.close();
+        SD.remove("log.txt");
+    } 
+}
