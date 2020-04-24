@@ -68,14 +68,10 @@ bool Sim808::gprsSendLocation(const CfgEntries & cfgEntries, const GpsEntries & 
 
     String entries = gpsEntries.toJson();
     sendCommand("AT+HTTPDATA=" + String(entries.length()) + ",10000");
-
     sendCommand(entries);
-    Serial.println(entries);
 
     sendCommand("AT+HTTPACTION=1");
-
     uint16_t statusCode = readHttpStatusCode();
-    Serial.println(statusCode);
 
     sendCommand("AT+HTTPTERM");
     sendCommand("AT+SAPBR=0,1");
