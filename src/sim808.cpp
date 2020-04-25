@@ -30,7 +30,7 @@ bool Sim808::gpsRead(const CfgEntries & cfgEntries, GpsEntries & entries)
     {
         GpsEntries result = parser.getResult();
 
-        const uint32_t updateDist = cfgEntries.updateDist;
+        const double updateDist = cfgEntries.updateDist;
         if (NmeaParser::isLocationUpdated(result, entries, updateDist))
         {
             entries = result;

@@ -30,7 +30,7 @@ void SdModule::readConfig(CfgEntries & cfgEntries) const
                 }
                 else if (key.equals("location_upd_dist"))
                 {
-                    const uint32_t updateDist = value.toInt();
+                    const uint16_t updateDist = value.toInt();
                     if (updateDist >= 0 && updateDist <= 1000)
                         cfgEntries.updateDist = updateDist;
                 }
