@@ -16,7 +16,7 @@ bool Sim808::gpsAvailable()
     return false;
 }
 
-bool Sim808::gpsRead(GpsEntries & entries)
+bool Sim808::gpsRead(const CfgEntries & cfgEntries, GpsEntries & entries)
 {
     static const uint8_t GPGGA = 2;
     static const uint8_t GPRMC = 32;
@@ -28,8 +28,13 @@ bool Sim808::gpsRead(GpsEntries & entries)
     
     if (parser.isValid())
     {
-        entries = parser.getResult();
-        return true;
+        GpsEntries result = parser.getResult();
+
+        if (NmeaParser::isLocationUpdated(result, entries, cfgEntries.updateDist))
+        {
+            entries = result;
+            return true;
+        }
     }
     return false;
 }

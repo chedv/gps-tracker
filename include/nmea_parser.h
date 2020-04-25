@@ -14,6 +14,8 @@ public:
 
     GpsEntries getResult();
 
+    static bool isLocationUpdated(const GpsEntries & upd, const GpsEntries & old, double distance);
+
 private:
 
     TinyGPSPlus tinyGps;

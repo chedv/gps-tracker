@@ -22,14 +22,20 @@ void SdModule::readConfig(CfgEntries & cfgEntries) const
                 const String key = buffer.substring(0, pos);
                 const String value = buffer.substring(pos + 1);
 
-                if (key.equals("auth_token"))
-                    cfgEntries.authToken = value;
-                else if (key.equals("work_delay"))
+                if (key.equals("work_delay"))
                 {
                     const uint32_t workDelay = value.toInt();
-                    if (workDelay > 0 && workDelay <= 600000)
+                    if (workDelay >= 30000 && workDelay <= 600000)
                         cfgEntries.workDelay = workDelay;
                 }
+                else if (key.equals("location_upd_dist"))
+                {
+                    const uint32_t updateDist = value.toInt();
+                    if (updateDist >= 0 && updateDist <= 1000)
+                        cfgEntries.updateDist = updateDist;
+                }
+                else if (key.equals("auth_token"))    
+                    cfgEntries.authToken = value;
             }
         }
         file.close();

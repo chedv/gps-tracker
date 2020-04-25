@@ -18,6 +18,7 @@ void setup()
 
     cfgEntries.deviceId = stm32Id();
     cfgEntries.workDelay = STM_DEFAULT_DELAY;
+    cfgEntries.updateDist = LOCATION_UPD_DIST;
 
     sim808.init(SIM_SERIAL, SIM_SERIAL_SPEED);
     sdModule.init(SD_SPI_PORT, SD_CS_PIN);
@@ -33,7 +34,7 @@ void loop()
         if (sim808.gprsAvailable())
             sdModule.restoreLocation(cfgEntries, sim808);
 
-        if (sim808.gpsAvailable() && sim808.gpsRead(gpsEntries))
+        if (sim808.gpsAvailable() && sim808.gpsRead(cfgEntries, gpsEntries))
         {
             if (sim808.gprsAvailable())
                 sim808.gprsSendLocation(cfgEntries, gpsEntries.toJson());

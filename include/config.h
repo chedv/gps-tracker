@@ -15,6 +15,8 @@ const uint32_t USB_SERIAL_SPEED = 9600;
 
 const uint32_t SIM_SERIAL_SPEED = 9600;
 
+const uint32_t LOCATION_UPD_DIST = 0;
+
 HardwareSerial & SIM_SERIAL = Serial3;
 
 #endif // _CONFIG_H_

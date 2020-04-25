@@ -11,7 +11,7 @@ public:
     void init(HardwareSerial & serial, uint32_t speed);
 
     bool gpsAvailable();
-    bool gpsRead(GpsEntries & gpsEntries);
+    bool gpsRead(const CfgEntries & cfgEntries, GpsEntries & gpsEntries);
 
     bool gprsAvailable();
     bool gprsSendLocation(const CfgEntries & cfgEntries, const String & gpsEntries);

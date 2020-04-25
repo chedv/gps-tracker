@@ -28,3 +28,12 @@ GpsEntries NmeaParser::getResult()
         tinyGps.satellites.value()
     };
 }
+
+bool NmeaParser::isLocationUpdated(const GpsEntries & upd, const GpsEntries & old, double distance)
+{
+    return 
+        TinyGPSPlus::distanceBetween(
+            upd.latitude, upd.longitude, 
+            old.latitude, old.longitude
+        ) >= distance;
+}
