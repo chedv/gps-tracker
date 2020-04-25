@@ -34,7 +34,7 @@ void SdModule::readConfig(CfgEntries & cfgEntries) const
                     if (updateDist >= 0 && updateDist <= 1000)
                         cfgEntries.updateDist = updateDist;
                 }
-                else if (key.equals("auth_token"))    
+                else if (key.equals("auth_token"))
                     cfgEntries.authToken = value;
             }
         }
